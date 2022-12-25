@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}China Studying Abroad Forum{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!--     Custom styles for this template -->
+    <link href="{{ url_for('static',filename='home.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='posts.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='interact.css') }}" rel="stylesheet">
+{% endblock %}
+
+{#主导航#}
+{% block navbar %}
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">China Studying Abroad Forum</a>
+            </div>
+
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <form class="navbar-form navbar-left" role="search" method="post">
+                      <div class="form-group">
+                          <input name="search" value=" " style="width: 420px;margin-left: 20px;" type="text" class="form-control" placeholder="Search">
+                      </div>
+                      <button type="submit" class="btn btn-default" >Submit</button>
+                    </form>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    {% if current_user.is_authenticated %}
+                        <li>
+                            <a href="{{ url_for('main.notification') }}" >
+                                <svg viewBox="0 0 1024 1024" width="20" height="20">
+                                    <defs><style type="text/css"></style></defs>
+                                    <path d="M892.343 738.743c7.314 0 21.943 0 29.257 7.314-29.257-21.943-51.2-58.514-51.2-95.086V424.23c0-168.229-117.029-307.2-285.257-343.772v-7.314C585.143 36.57 548.57 0 512 0s-80.457 36.571-80.457 73.143v7.314C270.629 117.03 153.6 256 153.6 424.23V650.97c0 36.572-21.943 73.143-51.2 95.086 7.314-7.314 14.629-7.314 29.257-7.314-29.257 0-51.2 21.943-51.2 51.2s21.943 51.2 51.2 51.2h768c29.257 0 51.2-21.943 51.2-51.2-7.314-21.943-29.257-43.886-58.514-51.2zM512 1024c73.143 0 131.657-58.514 131.657-131.657H380.343C380.343 965.486 438.857 1024 512 1024z" fill="#3BA9F6" p-id="1699">
+                                    </path>
+                                </svg>
+                                <span class="badge" style="margin-bottom: 10px"></span>
+                            </a>
+                        </li>
+                        <li>
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.avatar_img %}
+                                    <img class="img-rounded profile-thumbnail head" src="{{ current_user.avatar_img }}" alt="avatar" onclick="show_info_card()"
+                                         style="width: 30px; height: 30px; margin-top: 10px; margin-bottom: 0">
+                                {% else %}
+                                    <img class="img-rounded profile-thumbnail head" src="{{ current_user.gravatar(size=30) }}" alt="avatar">
+                                {% endif %}
+                            {% endif %}
+                        </li>
+                        <li class="dropdown">
+                            <a href="{{ url_for('main.notification') }}" class="dropdown-toggle" data-toggle="dropdown">Account<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('main.user', username=current_user.username) }}">MY Profile</a></li>
+                                <li><a href="{{ url_for('auth.change_password') }}">MY Account</a></li>
+                                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning col-md-8">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+    {% endfor %}
+    <div class="col-md-8 my-carousel" style="width: 100%">
+        <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+          <!-- Indicators -->
+            <ol class="carousel-indicators">
+                <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+                <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+                <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+                <li data-target="#carousel-example-generic" data-slide-to="3"></li>
+                <li data-target="#carousel-example-generic" data-slide-to="4"></li>
+            </ol>
+
+          <!-- Wrapper for slides -->
+            <div class="carousel-inner" role="listbox">
+                <div class="item active">
+                    <img src="../static/Image/轮播图1.jpeg" alt="...">
+                    <div class="hot-activity1">
+                        {% if hot_activity[0] %}
+                            <h3>{{ hot_activity[0].activity_name }}</h3>
+                            <p style="margin-bottom: 0">{{ hot_activity[0].activity_place }}</p><br>
+                            <p style="margin-bottom: 0">{{ hot_activity[0].activity_time }}</p>
+                            {% if not current_user.is_wanting(hot_activity[0]) %}
+                                <a class="icon-btn" href="{{ url_for('organization.want', activity_id=hot_activity[0].id) }}#{{ hot_activity[0].id }}">
+                                    <span class="glyphicon glyphicon-heart-empty"></span>
+                                    <span>{{ hot_activity[0].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% else %}
+                                <a class="icon-btn" href="{{ url_for('organization.not_want', activity_id=hot_activity[0].id) }}#{{ hot_activity[0].id }}">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                    <span>{{ hot_activity[0].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item">
+                    <img src="../static/Image/轮播图3.jpeg" alt="...">
+                    <div class="hot-activity2">
+                        {% if hot_activity[1] %}
+                            <h3>{{ hot_activity[1].activity_name }}</h3>
+                            <p style="margin-bottom: 0">{{ hot_activity[1].activity_place }}</p><br>
+                            <p style="margin-bottom: 0">{{ hot_activity[1].activity_time }}</p>
+                            {% if not current_user.is_wanting(hot_activity[1]) %}
+                                <a class="icon-btn" href="{{ url_for('organization.want', activity_id=hot_activity[1].id) }}#{{ hot_activity[1].id }}">
+                                    <span class="glyphicon glyphicon-heart-empty"></span>
+                                    <span>{{ hot_activity[1].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% else %}
+                                <a class="icon-btn" href="{{ url_for('organization.not_want', activity_id=hot_activity[1].id) }}#{{ hot_activity[1].id }}">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                    <span>{{ hot_activity[1].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item">
+                    <img src="../static/Image/轮播图2.jpeg" alt="...">
+                    <div class="hot-activity3">
+                        {% if hot_activity[2] %}
+                            <h3>{{ hot_activity[2].activity_name }}</h3>
+                            <p style="margin-bottom: 0">{{ hot_activity[2].activity_place }}</p><br>
+                            <p style="margin-bottom: 0">{{ hot_activity[2].activity_time }}</p>
+                            {% if not current_user.is_wanting(hot_activity[2]) %}
+                                <a class="icon-btn" href="{{ url_for('organization.want', activity_id=hot_activity[2].id) }}#{{ hot_activity[2].id }}">
+                                    <span class="glyphicon glyphicon-heart-empty"></span>
+                                    <span>{{ hot_activity[2].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% else %}
+                                <a class="icon-btn" href="{{ url_for('organization.not_want', activity_id=hot_activity[2].id) }}#{{ hot_activity[2].id }}">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                    <span>{{ hot_activity[2].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item">
+                    <img src="../static/Image/轮播图4.jpeg" alt="...">
+                    <div class="hot-activity4">
+                        {% if hot_activity[3] %}
+                            <h3>{{ hot_activity[3].activity_name }}</h3>
+                            <p style="margin-bottom: 0">{{ hot_activity[3].activity_place }}</p><br>
+                            <p style="margin-bottom: 0">{{ hot_activity[3].activity_time }}</p>
+                            {% if not current_user.is_wanting(hot_activity[3]) %}
+                                <a class="icon-btn" href="{{ url_for('organization.want', activity_id=hot_activity[3].id) }}#{{ hot_activity[3].id }}">
+                                    <span class="glyphicon glyphicon-heart-empty"></span>
+                                    <span>{{ hot_activity[3].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% else %}
+                                <a class="icon-btn" href="{{ url_for('organization.not_want', activity_id=hot_activity[3].id) }}#{{ hot_activity[3].id }}">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                    <span>{{ hot_activity[3].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item">
+                    <img src="../static/Image/轮播图5.jpeg"alt="...">
+                    <div class="hot-activity5">
+                        {% if hot_activity[4] %}
+                            <h3>{{ hot_activity[4].activity_name }}</h3>
+                            <p style="margin-bottom: 0">{{ hot_activity[4].activity_place }}</p><br>
+                            <p style="margin-bottom: 0">{{ hot_activity[4].activity_time }}</p>
+
+                            {% if not current_user.is_wanting(hot_activity[4]) %}
+                                <a class="icon-btn" href="{{ url_for('organization.want', activity_id=hot_activity[4].id) }}#{{ hot_activity[4].id }}">
+                                    <span class="glyphicon glyphicon-heart-empty"></span>
+                                    <span>{{ hot_activity[4].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% else %}
+                                <a class="icon-btn" href="{{ url_for('organization.not_want', activity_id=hot_activity[4].id) }}#{{ hot_activity[4].id }}">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                    <span>{{ hot_activity[4].wanter.count() }} WantToGo</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+          <!-- Controls -->
+            <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="col-md-12 content">
+            <div class="tabbable">
+                <ul class="nav post-nav">
+                    {% if panel_id == 1 %}
+                        <li class="active" id="btn-1"><a>Posts</a></li>
+                    {% else %}
+                        <li id="btn-1"><a href="{{ url_for('.index') }}">Posts</a></li>
+                    {% endif %}
+                    {% if current_user.is_authenticated %}
+                        {% if panel_id == 2 %}
+                            <li class="active" id="btn-2"><a>Recruitment</a></li>
+                        {% else %}
+                            <li id="btn-2"><a href="{{ url_for('.index_transaction') }}">Recruitment</a></li>
+                        {% endif %}
+                        {% if panel_id == 3 %}
+                            <li class="active" id="btn-3"><a>Announcements</a></li>
+                        {% else %}
+                            <li id="btn-3"><a href="{{ url_for('.index_activity') }}">Announcements</a></li>
+                        {% endif %}
+                        {% if panel_id == 4 %}
+                            <li class="active" id="btn-4"><a>Follows</a></li>
+                        {% else %}
+                            <li id="btn-4"><a href="{{ url_for('.index_follow') }}">Follows</a></li>
+                        {% endif %}
+                        {% if panel_id == 5 %}
+                            <li class="active" id="btn-4"><a>Favorite</a></li>
+                        {% else %}
+                            <li id="btn-4"><a href="{{ url_for('.index_favorites') }}">Favorite</a></li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <div class="tab-content">
+                    {% if panel_id == 1 %}
+                        <div class="tab-pane active" id="panel-1">
+                            <ul class="posts list-unstyled">
+                                {% for post in posts1 %}
+                                    {% include 'Posts/_posts.html' %}
+                                {% endfor %}
+                            </ul>
+                            {% if pagination1 %}
+                                <div class="pagination">
+                                    {{ macros.pagination_widget(pagination1, '.index') }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% elif panel_id == 2%}
+                        <div class="tab-pane active" id="panel-2">
+                            <ul class="posts list-unstyled">
+                                {% for transaction in transactions %}
+                                    {% if transaction.is_sold!=true %}
+                                        {% include 'transaction/_transactions.html' %}
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% elif panel_id == 3%}
+                        <div class="tab-pane active" id="panel-3">
+                            <ul class="posts list-unstyled">
+                                {% for avtivity in activities %}
+                                    {% if avtivity.is_invalid!=true %}
+                                        {% include 'organization/_activities.html' %}
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% elif panel_id == 4%}
+                        <div class="tab-pane active" id="panel-4">
+                            <ul class="posts list-unstyled">
+                                {% for post in posts4 %}
+                                    {% include 'Posts/_posts.html' %}
+                                {% endfor %}
+                            </ul>
+                            {% if pagination4 %}
+                                <div class="pagination">
+                                    {{ macros.pagination_widget(pagination4, '.index') }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% elif panel_id == 5%}
+                        <div class="tab-pane active" id="panel-3">
+                            <ul class="posts list-unstyled">
+                                {% for post in favorites %}
+                                    {% include 'Posts/_posts.html' %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if current_user.is_authenticated %}
+          <div class="col-md-offset-2 outer">
+              <div class="thumbnail inner1 col-sm-12" id="info_card" style="display: none; margin-left: -90px; margin-top: 10px">
+                  <div class="col-sm-3">
+                    {% if current_user.avatar_img %}
+                        <img class="img-rounded profile-thumbnail head" src="{{ current_user.avatar_img }}" alt="avatar"  style="width: 50px; height: 50px">
+                    {% else %}
+                        <img class="img-rounded profile-thumbnail head" src="{{ current_user.gravatar(size=50) }}" alt="avatar">
+                    {% endif %}
+                  </div>
+                  <div class="col-sm-8 caption">
+                        <a href="{{ url_for('main.user', username=current_user.username) }}">
+                            <h4>{{ current_user.username }}
+                                {% if current_user.can(Permission.RECRUITMENT) %}
+                                <svg class="icon" viewBox="0 0 1024 1024" width="20" height="20" style="margin: 0">
+                                    <path d="M959.786667 148.906667l-44.330667-0.725333c-1.024 0-100.437333-2.048-203.050667-41.728-105.301333-40.789333-173.141333-87.552-173.781333-88.021333L511.872 0 485.248 18.474667C484.608 18.901333 416.768 65.706667 311.466667 106.453333 208.938667 146.218667 109.482667 148.181333 108.544 148.181333L64 148.906667l0 430.464C64 795.477333 355.328 1024 511.957333 1024 668.714667 1024 960 795.477333 960 579.370667L959.786667 148.906667zM321.877333 772.48 321.877333 355.413333 282.112 355.413333 282.112 317.482667 441.173333 317.482667l0 189.610667 200.192-189.610667 157.696 0L321.877333 772.48z" fill="#3688FF"></path>
+                                </svg>
+                                {% endif %}
+                            </h4>
+                        </a>
+                        <p class="info"> {{ current_user.about_me }}</p>
+                  </div>
+                  <div class="follow btn-group btn-group-justified" role="group">
+                      <a href="{{ url_for('.followers', username=current_user.username) }}" class="btn left-btn" role="button">{{ current_user.followers.count() - 1 }} Followers</a>
+                      <a href="{{ url_for('.followed_by', username=current_user.username) }}" class="btn" role="button">{{ current_user.following.count() - 1 }} Following</a>
+                  </div>
+              </div>
+
+              <div class="inner2  col-sm-12" id="info_card_op" style="display: none; margin-left: -90px">
+                  <div class="inner2-left col-sm-3">
+                      <div class="new-posts">
+                          <div>
+                              <a href="{{ url_for('.new_post_md')}}">
+                                  <svg class="icon" viewBox="0 0 1024 1024" version="1.1" width="40" height="40">
+                                    <defs><style type="text/css"></style></defs>
+                                    <path d="M824 921H184c-52.9 0-96-43.1-96-96V185c0-52.9 43.1-96 96-96h640c52.9 0 96 43.1 96 96v640c0 52.9-43.1 96-96 96zM184 153c-17.6 0-32 14.4-32 32v640c0 17.6 14.4 32 32 32h640c17.6 0 32-14.4 32-32V185c0-17.6-14.4-32-32-32H184z" fill="#3688FF" p-id="1446"></path>
+                                    <path d="M285.9 750.9c-8.4 0-16.5-3.3-22.6-9.4-8.4-8.4-11.5-20.8-7.9-32.2l49.3-157.1c1.5-4.9 4.3-9.4 7.9-13l328.8-328.8c6-6 14.1-9.4 22.6-9.4s16.6 3.4 22.6 9.4l107.8 107.8c12.5 12.5 12.5 32.8 0 45.3L465.6 692.2c-3.6 3.6-8.1 6.4-13 7.9l-157.1 49.3c-3.2 1-6.4 1.5-9.6 1.5z m77.5-172L334.8 670l91.2-28.6 300.6-300.6-62.6-62.5-300.6 300.6z" fill="#3688FF" p-id="1447"></path>
+                                    <path d="M486.4 640.3c-8.2 0-16.4-3.1-22.6-9.4L374 541.1c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l89.8 89.8c12.5 12.5 12.5 32.8 0 45.3-6.4 6.3-14.5 9.4-22.7 9.4z" fill="#3688FF" p-id="1448"></path>
+                                </svg>
+                              </a>
+                          </div>
+                          <div class="icon-word">new post</div>
+                      </div>
+                  </div>
+                  {% if current_user.can(Permission.RECRUITMENT) %}
+              <!--                  发布实习生招募-->
+                      <div class="inner2-right col-sm-3">
+                          <div class="new-transaction">
+                              <div>
+                                  <a href="{{ url_for('transaction.new_transaction')}}">
+                                      <svg t="1638106930099" class="icon" viewBox="0 0 1129 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1766" width="40" height="40">
+                                          <path d="M982.827479 624.00694a372.072678 372.072678 0 0 1 204.714627 294.134501H1099.734745a282.279537 282.279537 0 0 0-172.150801-223.512359c-2.896553 2.538217-5.88269 4.777819-8.838966 7.166729a489.860854 489.860854 0 0 0-57.30397-71.368676 295.627569 295.627569 0 0 0 73.160358-97.945296c34.504814-67.188084 57.692168-149.008239 57.692168-203.654547a172.837613 172.837613 0 0 0-137.362305-169.015358 344.45091 344.45091 0 0 0-50.301479-90.479953c4.971918-0.298614 9.958767-0.447921 14.930686-0.447921a260.241845 260.241845 0 0 1 259.943231 259.943232c0 71.965903-28.696777 173.793177-71.413468 253.224423a476.139555 476.139555 0 0 1-25.26272 41.955225z m-251.238641-71.517982a562.438916 562.438916 0 0 1-27.950243 46.285124 412.594558 412.594558 0 0 1 226.722456 367.444166v13.586923h-91.853576v-13.586923a318.635755 318.635755 0 0 0-192.889523-293.23866 168.537576 168.537576 0 0 1-232.500632 0.746535 294.55256 294.55256 0 0 0-104.380421 64.799174h-36.505526v-85.254213a401.336821 401.336821 0 0 1 83.925382-54.049081 523.081629 523.081629 0 0 1-28.368302-46.733045c-45.867065-85.254213-76.684-194.54683-76.683999-271.88778a278.561796 278.561796 0 1 1 557.108661 0c0.059723 77.34095-30.757212 186.633566-76.624277 271.88778zM529.725972 93.818305a186.947111 186.947111 0 0 0-186.633566 186.782873c0 59.872048 24.39674 146.022102 62.156443 219.630381 40.073959 78.087484 86.597975 124.521916 124.551777 124.521916s84.462887-46.434431 124.536846-124.521916c37.759703-73.608279 62.156443-159.758333 62.156443-219.630381A186.93218 186.93218 0 0 0 529.725972 93.818305zM327.519701 904.703824h-119.997918v119.146869H118.13177v-119.146869H0.000188v-89.434805h118.131582v-119.146868h89.464667v119.146868h119.997917v89.434805z m416.77515 74.802734h-148.381151v-74.50412h148.321428v74.50412z" fill="#3688FF" p-id="1767">
+                                          </path>
+                                      </svg>
+                                  </a>
+                              </div>
+                              <div class="icon-word">recruitment</div>
+                          </div>
+                      </div>
+                  {% else %}
+              <!--                查看投递简历进度-->
+                      <div class="inner2-right col-sm-3">
+                          <div class="new-activity">
+                              <div>
+                                  <a href="{{ url_for('recruitment.my_resumes')}}">
+                                      <svg t="1638107369522" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3420" width="40" height="40"><path d="M768 36.352H35.328V904.192H768V36.352zM706.048 842.24H97.28V98.304h608.256V842.24z" fill="#3688FF" p-id="3421"></path><path d="M154.624 502.784H634.88v34.304h-480.256zM154.624 588.8H634.88v34.304h-480.256zM155.136 664.064h480.256v34.304h-480.256zM155.136 750.08h480.256v34.304h-480.256zM408.576 171.008h220.16v34.304h-220.16zM408.576 257.024h220.16v34.304h-220.16zM413.184 332.288h220.672v34.304h-220.672z" fill="#3688FF" p-id="3422"></path><path d="M795.136 140.288v62.464h19.968V946.176H206.848v-14.848h-62.464V1008.64h733.184V140.288z" fill="#3688FF" p-id="3423"></path><path d="M413.184 418.304h220.672v34.304h-220.672zM367.104 174.08h-224.256v261.12h224.256v-261.12z m-41.984 211.456v1.024c0 14.848-31.744 27.136-71.168 27.136s-71.168-12.288-71.168-27.136V341.504h0.512c2.56-14.336 14.848-26.112 31.744-33.792l19.968-7.68 0.512-8.192c-8.192-6.144-14.336-16.896-16.384-29.696-4.608-0.512-8.192-5.12-8.192-11.264 0-4.608 2.048-8.192 5.12-10.24 0 0-11.776-34.816 12.8-48.128 0 0 48.64-21.504 51.2 6.144 19.968 9.216 10.24 40.96 10.24 40.96 4.096 1.024 7.168 5.632 7.168 10.752 0 6.144-4.096 11.264-8.704 11.264h-0.512c-2.048 11.264-6.656 20.992-13.824 27.648l0.512 9.216 17.92 9.216c17.408 7.68 29.184 19.456 31.744 33.792h0.512v44.032z" fill="#3688FF" p-id="3424"></path>
+                                      </svg>
+                                  </a>
+                              </div>
+                              <div class="icon-word">resume</div>
+                           </div>
+                      </div>
+                  {% endif %}
+              </div>
+                <div class="col-sm-12 inner3" style="margin-top: 320px; margin-left: -48px" id="hot_post">
+                      <h4>Hottest Posts</h4>
+                      <ul class="posts list-unstyled">
+                          {% for post in posts5 %}
+                            {% if loop.index0 <= 2 %}
+                                <li class="hot-post"><a href="{{ url_for('.post', id=posts5[loop.index0].id) }}">
+                                  <span class="glyphicon glyphicon-fire"></span>
+                                  <span>{{ posts5[loop.index0].title }}</span>
+                              </a></li>
+                            {% else %}
+                                <li><a href="{{ url_for('.post', id=posts5[loop.index0].id) }}"><h4>
+                                    <small>4. {{ posts5[loop.index0].title }}</small>
+                                </h4></a></li>
+                            {% endif %}
+                          {% endfor %}
+                      </ul>
+                </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    var user_card_show = false;
+    var user_card = document.getElementById("info_card")
+    var user_card_op = document.getElementById("info_card_op")
+    var hot_post = document.getElementById("hot_post")
+    function show_info_card(){
+        if (!user_card_show){
+            user_card.style.display = "";
+            user_card_op.style.display = "";
+            hot_post.style.marginTop = "33px";
+            user_card_show = true;
+        } else {
+            user_card.style.display = "none";
+            user_card_op.style.display = "none";
+            hot_post.style.marginTop = "320px";
+            user_card_show = false;
+        }
+    }
+</script>
+{% endblock %}
